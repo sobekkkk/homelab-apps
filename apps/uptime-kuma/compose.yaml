@@ -31,6 +31,10 @@ services:
     restart: unless-stopped
     volumes:
       - uptime_kuma_data:/app/data
+    ports:
+      # Accessible uniquement depuis l'hôte ; Tailscale Serve assure le TLS
+      # et l'accès privé du tailnet sur son port HTTPS dédié.
+      - "127.0.0.1:3001:3001"
     networks:
       - kuma
     security_opt:
