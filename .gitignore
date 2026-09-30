@@ -1,0 +1,6 @@
+# Les variables réelles et les données d'applications restent hors Git.
+.env
+.env.*
+!.env.example
+data/
+backups/
