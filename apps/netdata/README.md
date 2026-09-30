@@ -8,7 +8,8 @@ leur point d'accès.
 ## Réseau et accès
 
 - Netdata ne publie aucun port hôte ; Caddy est son seul proxy sur le réseau
-  Docker externe `homelab-proxy` ;
+  Docker externe `homelab-proxy` ; le port 8444 publié par Caddy sur le LAN est
+  réservé au relais Tailscale et ne donne pas un accès direct au conteneur ;
 - l'accès LAN passe par `https://netdata.home.arpa` après résolution de ce nom
   vers `192.168.1.69` et confiance dans l'autorité Caddy ;
 - l'accès distant privé passe par

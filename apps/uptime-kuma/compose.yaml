@@ -8,6 +8,9 @@ services:
     ports:
       # 443 sur l'adresse Tailscale est réservé à Tailscale Serve (Portainer).
       - "192.168.1.69:443:443"
+      # Relais interne dédié à Netdata. Il est lié au LAN, tandis que Tailscale
+      # Serve emploie le même port seulement sur l'adresse Tailscale.
+      - "192.168.1.69:8444:8444"
     volumes:
       - caddy_data:/data
       - caddy_config:/config
@@ -101,6 +104,14 @@ configs:
       }
 
       netdata.home.arpa {
+        tls internal
+        reverse_proxy netdata:19999
+      }
+
+      # Ce listener sans nom est exclusivement la cible locale du relais
+      # Tailscale Netdata. Un port distinct évite que le Host du client
+      # tailnet sélectionne par erreur le vhost Kuma sur 443.
+      :8444 {
         tls internal
         reverse_proxy netdata:19999
       }
