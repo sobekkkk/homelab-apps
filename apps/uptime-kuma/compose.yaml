@@ -39,6 +39,9 @@ services:
       - kuma
     security_opt:
       - no-new-privileges:true
+    labels:
+      # Révision explicite après l'activation du support nftables Docker.
+      - "homelab.gitops-revision=2026-09-30-nftables"
 
 networks:
   homelab-proxy:

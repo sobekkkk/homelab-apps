@@ -32,3 +32,6 @@ avant la mise en place et le test d'une sauvegarde.
 Le stack est lu par Portainer depuis `apps/uptime-kuma/compose.yaml`. Toute
 modification doit être commitée puis laissée au mécanisme GitOps ; ne pas
 modifier le compose dans l'éditeur Web de Portainer.
+
+Le label `homelab.gitops-revision` permet de recréer explicitement Kuma après
+une modification du moteur Docker, sans modifier ses données persistantes.
