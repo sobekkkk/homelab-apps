@@ -4,6 +4,18 @@ services:
     image: ghcr.io/netdata/netdata:v2.11.1@sha256:04218b2713bad4990ecd0c3dd9424bbf1a687bf72afb7b5f188c1e25e3619142
     hostname: homelab
     restart: unless-stopped
+    environment:
+      DISABLE_TELEMETRY: "1"
+      DO_NOT_TRACK: "1"
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    configs:
+      - source: netdata_configuration
+        target: /etc/netdata/netdata.conf
+        mode: 0444
     # Netdata observe les processus et les cgroups de l'hôte sans publier son
     # propre port ni partager le réseau de l'hôte.
     pid: host
@@ -27,8 +39,8 @@ services:
     # SYS_PTRACE est nécessaire à l'observation des processus. Les cinq
     # capacités de fichiers/utilisateur servent uniquement à l'initialisation
     # du volume Netdata et au passage vers son utilisateur non privilégié.
-    # Aucune capacité réseau, d'administration Docker ou d'écriture sur l'hôte
-    # n'est donnée.
+    # Attention : PID hôte + SYS_PTRACE restent sensibles. Les montages ro
+    # ne garantissent pas une isolation complète vis-à-vis des processus hôte.
     cap_add:
       - SYS_PTRACE
       - CHOWN
@@ -48,3 +60,19 @@ volumes:
     name: netdata-lib
   netdata_cache:
     name: netdata-cache
+
+configs:
+  netdata_configuration:
+    content: |
+      # Politique versionnée. Les durées sont des objectifs : chaque tier est
+      # aussi limité en taille, et sa rétention effective peut être plus courte.
+      [db]
+          db = dbengine
+          update every = 1
+          storage tiers = 3
+          dbengine tier 0 retention size = 1GiB
+          dbengine tier 0 retention time = 14d
+          dbengine tier 1 retention size = 1GiB
+          dbengine tier 1 retention time = 3mo
+          dbengine tier 2 retention size = 1GiB
+          dbengine tier 2 retention time = 1y
