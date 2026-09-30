@@ -32,3 +32,7 @@ avant la mise en place et le test d'une sauvegarde.
 Le stack est lu par Portainer depuis `apps/uptime-kuma/compose.yaml`. Toute
 modification doit être commitée puis laissée au mécanisme GitOps ; ne pas
 modifier le compose dans l'éditeur Web de Portainer.
+
+Les sondes internes de Kuma peuvent joindre `https://caddy` en ignorant le
+certificat et en envoyant l'en-tête `Host` du service attendu. Le vhost `caddy`
+ne sert qu'à fournir ce certificat TLS interne : il n'est pas publié sur l'hôte.
