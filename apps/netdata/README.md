@@ -22,6 +22,11 @@ lecture seule. Ils donnent les métriques de l'hôte et des unités systemd. Le
 conteneur utilise le namespace PID de l'hôte pour associer les processus et les
 cgroups à ces métriques.
 
+Le conteneur démarre avec un petit ensemble de capacités supplémentaires pour
+initialiser ses propres volumes puis basculer vers son utilisateur de service :
+`CHOWN`, `DAC_OVERRIDE`, `FOWNER`, `SETGID`, `SETUID` et `SYS_PTRACE`. Elles ne
+permettent pas d'écrire dans les montages hôte, qui restent en lecture seule.
+
 Le socket Docker n'est volontairement **pas** monté. Même un proxy de socket
 présenté comme lecture seule peut autoriser, via des endpoints GET, la lecture
 de journaux ou de fichiers d'autres conteneurs. Netdata affiche donc les

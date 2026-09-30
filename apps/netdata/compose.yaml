@@ -24,10 +24,18 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    # Nécessaire à l'observation des processus de l'hôte, sans capacité de les
-    # modifier. Aucune capacité réseau ou d'administration Docker n'est donnée.
+    # SYS_PTRACE est nécessaire à l'observation des processus. Les cinq
+    # capacités de fichiers/utilisateur servent uniquement à l'initialisation
+    # du volume Netdata et au passage vers son utilisateur non privilégié.
+    # Aucune capacité réseau, d'administration Docker ou d'écriture sur l'hôte
+    # n'est donnée.
     cap_add:
       - SYS_PTRACE
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
 
 networks:
   homelab-proxy:
