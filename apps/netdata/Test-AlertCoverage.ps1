@@ -1,8 +1,19 @@
-param([switch]$RequireDeployed)
+param([switch]$RequireDeployed, [switch]$Offline)
 $ErrorActionPreference = 'Stop'
 $endpoint = 'https://homelab.tail239aaa.ts.net:8444'
 $rulePath = Join-Path $PSScriptRoot 'health.d/homelab.conf'
 $ruleText = Get-Content -LiteralPath $rulePath -Raw
+$composeText = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'compose.yaml') -Raw
+$inline = [regex]::Match($composeText, '(?ms)^  netdata_health:\r?\n(?:    #[^\n]*\n)*    content: \|\r?\n(?<content>.*?)(?=^  netdata_notifications:)')
+if (-not $inline.Success) { throw 'Configuration health inline absente' }
+$decoded = [regex]::Replace($inline.Groups['content'].Value, '(?m)^      ', '').Replace('$$', '$')
+if ($decoded.Replace("`r`n", "`n").TrimEnd() -cne $ruleText.Replace("`r`n", "`n").TrimEnd()) {
+    throw 'Regles inline et health.d/homelab.conf desynchronisees'
+}
+# Chaque dollar doit appartenir a une paire $$ dans le Compose.
+if ($inline.Groups['content'].Value.Replace('$$', '') -match '\$') { throw 'Variable Netdata non protegee dans le Compose' }
+if ($Offline -and $RequireDeployed) { throw 'Offline et RequireDeployed sont incompatibles' }
+if ($Offline) { 'Parite inline/canonique et echappement verifies. Aucun test runtime.'; return }
 $ruleBlocks = [regex]::Split($ruleText, '(?m)(?=^alarm:)') | Where-Object { $_ -match '^alarm:' }
 $charts = Invoke-RestMethod "$endpoint/api/v1/charts" -TimeoutSec 20
 $alarms = Invoke-RestMethod "$endpoint/api/v1/alarms?all" -TimeoutSec 20

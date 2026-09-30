@@ -77,7 +77,221 @@ volumes:
 
 configs:
   netdata_health:
-    file: ./health.d/homelab.conf
+    # Copie de health.d/homelab.conf. $$ protege les variables Netdata.
+    # Test-AlertCoverage.ps1 verifie la parite avant la validation runtime.
+    content: |
+      # Regles homelab. Source canonique; copie inline Compose verifiee par le test.
+
+      alarm: homelab_cpu_sustained
+          on: system.cpu
+          lookup: average -10m unaligned of user,system,nice,softirq,irq,guest
+          units: %
+          warn: $$this > (($$status >= $$WARNING) ? 85 : 90)
+          crit: $$this > (($$status == $$CRITICAL) ? 95 : 98)
+          delay: up 2m down 5m
+          summary: CPU durablement sature
+          info: CPU moyen sur 10 minutes. Verifier processus et builds Nix avant toute action.
+          every: 30s
+          repeat: warning 0s critical 4h
+          to: sysadmin
+
+      alarm: homelab_ram_available
+          on: mem.available
+          calc: $$avail * 100 / ($$system.ram.used + $$system.ram.cached + $$system.ram.free + $$system.ram.buffers)
+          units: %
+          warn: $$this < (($$status >= $$WARNING) ? 15 : 10)
+          crit: $$this < (($$status == $$CRITICAL) ? 8 : 5)
+          delay: up 5m down 5m
+          summary: Memoire disponible faible
+          info: MemAvailable exclut la fausse saturation due au cache Linux. Verifier processus, pression memoire et OOM.
+          every: 30s
+          repeat: warning 0s critical 4h
+          to: sysadmin
+
+      alarm: homelab_root_space
+          on: disk_space./
+          calc: $$used * 100 / ($$avail + $$used)
+          units: %
+          warn: $$this > (($$status >= $$WARNING) ? 80 : 85) || $$avail < (($$status >= $$WARNING) ? 20 : 15)
+          crit: $$this > (($$status == $$CRITICAL) ? 92 : 95) || $$avail < (($$status == $$CRITICAL) ? 8 : 5)
+          delay: up 2m down 5m
+          summary: Disque racine manque de place
+          info: Avertissement >85% ou <15 GiB libres; critique >95% ou <5 GiB. Inspecter Nix, logs et volumes; ne jamais supprimer les volumes automatiquement.
+          every: 30s
+          repeat: warning 0s critical 4h
+          to: sysadmin
+
+      alarm: homelab_boot_space
+          on: disk_space./boot
+          calc: $$avail * 1024
+          units: MiB
+          warn: $$this < (($$status >= $$WARNING) ? 250 : 200)
+          crit: $$this < (($$status == $$CRITICAL) ? 150 : 100)
+          delay: up 2m down 5m
+          summary: Partition EFI manque de place
+          info: Verifier les generations et UKI via les outils NixOS/Lanzaboote; ne pas effacer les fichiers EFI manuellement.
+          every: 30s
+          repeat: warning 0s critical 4h
+          to: sysadmin
+
+      alarm: homelab_root_inodes
+          on: disk_inodes./
+          calc: $$avail * 100 / ($$avail + $$used)
+          units: %
+          warn: $$this < (($$status >= $$WARNING) ? 20 : 15)
+          crit: $$this < (($$status == $$CRITICAL) ? 8 : 5)
+          delay: up 2m down 5m
+          summary: Inodes disponibles faibles
+          info: Un disque peut refuser les ecritures malgre des GiB libres. Rechercher les repertoires contenant beaucoup de petits fichiers.
+          every: 30s
+          repeat: warning 0s critical 4h
+          to: sysadmin
+
+      alarm: homelab_memory_stalls
+          on: system.memory_full_pressure
+          calc: $${full 300}
+          units: %
+          warn: $$this > (($$status >= $$WARNING) ? 3 : 5)
+          crit: $$this > (($$status == $$CRITICAL) ? 15 : 20)
+          delay: up 2m down 5m
+          summary: Blocages durables lies a la memoire
+          info: PSI full memoire moyen sur 5 minutes. Verifier swap, OOM et applications gourmandes.
+          every: 30s
+          repeat: warning 0s critical 4h
+          to: sysadmin
+
+      alarm: homelab_io_stalls
+          on: system.io_full_pressure
+          calc: $${full 300}
+          units: %
+          warn: $$this > (($$status >= $$WARNING) ? 10 : 20)
+          crit: $$this > (($$status == $$CRITICAL) ? 30 : 50)
+          delay: up 2m down 5m
+          summary: Blocages durables des entrees sorties
+          info: PSI full IO moyen sur 5 minutes. Verifier latence disque et workloads; une copie intensive seule ne prouve pas une panne.
+          every: 30s
+          repeat: warning 0s critical 4h
+          to: sysadmin
+
+      alarm: homelab_service_docker
+          on: systemdunits_service-units.unit_docker_service_state
+          lookup: max -2m unaligned of active
+          units: state
+          crit: $$this < 1
+          delay: up 30s down 2m
+          summary: Service essentiel docker inactif
+          info: Aucun point actif sur la fenetre de 2 minutes. Consulter systemctl status et le journal de docker; ne pas redemarrer automatiquement.
+          every: 30s
+          repeat: warning 0s critical 4h
+          to: sysadmin
+
+      alarm: homelab_service_tailscaled
+          on: systemdunits_service-units.unit_tailscaled_service_state
+          lookup: max -2m unaligned of active
+          units: state
+          crit: $$this < 1
+          delay: up 30s down 2m
+          summary: Service essentiel tailscaled inactif
+          info: Aucun point actif sur la fenetre de 2 minutes. Consulter systemctl status et le journal de tailscaled; ne pas redemarrer automatiquement.
+          every: 30s
+          repeat: warning 0s critical 4h
+          to: sysadmin
+
+      alarm: homelab_service_sshd
+          on: systemdunits_service-units.unit_sshd_service_state
+          lookup: max -2m unaligned of active
+          units: state
+          crit: $$this < 1
+          delay: up 30s down 2m
+          summary: Service essentiel sshd inactif
+          info: Aucun point actif sur la fenetre de 2 minutes. Consulter systemctl status et le journal de sshd; ne pas redemarrer automatiquement.
+          every: 30s
+          repeat: warning 0s critical 4h
+          to: sysadmin
+
+      alarm: homelab_service_auditd
+          on: systemdunits_service-units.unit_auditd_service_state
+          lookup: max -2m unaligned of active
+          units: state
+          crit: $$this < 1
+          delay: up 30s down 2m
+          summary: Service essentiel auditd inactif
+          info: Aucun point actif sur la fenetre de 2 minutes. Consulter systemctl status et le journal de auditd; ne pas redemarrer automatiquement.
+          every: 30s
+          repeat: warning 0s critical 4h
+          to: sysadmin
+
+      alarm: homelab_service_nftables
+          on: systemdunits_service-units.unit_nftables_service_state
+          lookup: max -2m unaligned of active
+          units: state
+          crit: $$this < 1
+          delay: up 30s down 2m
+          summary: Service essentiel nftables inactif
+          info: Aucun point actif sur la fenetre de 2 minutes. Consulter systemctl status et le journal de nftables; ne pas redemarrer automatiquement.
+          every: 30s
+          repeat: warning 0s critical 4h
+          to: sysadmin
+
+      alarm: homelab_service_docker_lan_guard
+          on: systemdunits_service-units.unit_docker-lan-guard_service_state
+          lookup: max -2m unaligned of active
+          units: state
+          crit: $$this < 1
+          delay: up 30s down 2m
+          summary: Service essentiel docker-lan-guard inactif
+          info: Aucun point actif sur la fenetre de 2 minutes. Consulter systemctl status et le journal de docker-lan-guard; ne pas redemarrer automatiquement.
+          every: 30s
+          repeat: warning 0s critical 4h
+          to: sysadmin
+
+      alarm: homelab_service_docker_portainer
+          on: systemdunits_service-units.unit_docker-portainer_service_state
+          lookup: max -2m unaligned of active
+          units: state
+          crit: $$this < 1
+          delay: up 30s down 2m
+          summary: Service essentiel docker-portainer inactif
+          info: Aucun point actif sur la fenetre de 2 minutes. Consulter systemctl status et le journal de docker-portainer; ne pas redemarrer automatiquement.
+          every: 30s
+          repeat: warning 0s critical 4h
+          to: sysadmin
+
+      alarm: homelab_service_tailscale_portainer_serve
+          on: systemdunits_service-units.unit_tailscale-portainer-serve_service_state
+          lookup: max -2m unaligned of active
+          units: state
+          crit: $$this < 1
+          delay: up 30s down 2m
+          summary: Service essentiel tailscale-portainer-serve inactif
+          info: Aucun point actif sur la fenetre de 2 minutes. Consulter systemctl status et le journal de tailscale-portainer-serve; ne pas redemarrer automatiquement.
+          every: 30s
+          repeat: warning 0s critical 4h
+          to: sysadmin
+
+      alarm: homelab_service_tailscale_uptime_kuma_serve
+          on: systemdunits_service-units.unit_tailscale-uptime-kuma-serve_service_state
+          lookup: max -2m unaligned of active
+          units: state
+          crit: $$this < 1
+          delay: up 30s down 2m
+          summary: Service essentiel tailscale-uptime-kuma-serve inactif
+          info: Aucun point actif sur la fenetre de 2 minutes. Consulter systemctl status et le journal de tailscale-uptime-kuma-serve; ne pas redemarrer automatiquement.
+          every: 30s
+          repeat: warning 0s critical 4h
+          to: sysadmin
+
+      alarm: homelab_service_tailscale_netdata_serve
+          on: systemdunits_service-units.unit_tailscale-netdata-serve_service_state
+          lookup: max -2m unaligned of active
+          units: state
+          crit: $$this < 1
+          delay: up 30s down 2m
+          summary: Service essentiel tailscale-netdata-serve inactif
+          info: Aucun point actif sur la fenetre de 2 minutes. Consulter systemctl status et le journal de tailscale-netdata-serve; ne pas redemarrer automatiquement.
+          every: 30s
+          repeat: warning 0s critical 4h
+          to: sysadmin
   netdata_notifications:
     content: |
       # Fichier shell de confiance, créé par l'administrateur sur l'hôte.

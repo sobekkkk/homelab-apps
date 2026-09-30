@@ -1,7 +1,12 @@
 # Notifications Discord de l'agent
 
-Les règles ciblées sont versionnées dans `health.d/homelab.conf`, monté via
-`configs.file` pour éviter l'interpolation des variables `$this` par Compose.
+Les règles ciblées sont versionnées dans `health.d/homelab.conf` et intégrées
+dans `configs.netdata_health.content` du Compose. Les variables Netdata y sont
+échappées (`$$this`, `$${full 300}`) pour éviter leur interpolation par Compose.
+Ce choix évite un bind vers le chemin interne de Portainer, absent de l'hôte
+Docker. Pour modifier les règles, mettre à jour les deux copies puis exécuter
+`./Test-AlertCoverage.ps1 -Offline` : toute divergence bloque ce contrôle.
+Valider aussi le Compose avec `docker compose -f compose.yaml config --quiet`.
 La liste autorisée est `homelab_* oom_kill 1hour_memory_hw_corrupted` : les
 autres règles natives ne sont plus chargées après activation. Toute nouvelle
 intégration doit donc faire l'objet d'une revue de couverture. Kuma reste

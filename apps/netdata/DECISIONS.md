@@ -42,6 +42,20 @@ Hystérésis, moyennes, délais et rappels critiques limitent le bruit.
 Aucun accès supplémentaire, secret lu ou incident artificiel n'est nécessaire.
 Le déploiement du nouveau jeu et le retest runtime restent soumis à approbation.
 
+## Correction du déploiement Portainer (2026-09-30)
+
+L'activation approuvée a échoué : `configs.file` produisait un bind vers
+`/data/compose/4/...`, chemin interne au conteneur Portainer et absent de
+l'hôte Docker. C'était une erreur du patch, pas un secret manquant.
+Les règles non sensibles sont désormais intégrées via `configs.content`,
+comme les autres configurations de la stack. Aucun volume, port, privilège
+ou secret n'est changé. Les dollars sont échappés pour Compose ; le test
+offline vérifie leur échappement et la parité avec le fichier canonique.
+Le retest de chargement/évaluation nécessite encore le redéploiement depuis
+Git ; la validation statique ne constitue pas une validation runtime.
+
 Références :
+- https://docs.docker.com/reference/compose-file/configs/
+- https://docs.docker.com/reference/compose-file/interpolation/
 - https://learn.netdata.cloud/docs/netdata-agent/configuration/database
 - https://github.com/netdata/netdata/blob/v2.11.1/packaging/docker/run.sh
