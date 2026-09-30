@@ -49,7 +49,9 @@ agrégé. Chaque niveau vise au maximum 1 GiB de données : la durée effective 
 être plus courte, et les tailles sont des limites souples, pas des quotas disque.
 Les journaux Docker tournent sur trois fichiers de 10 Mo. La télémétrie anonyme
 est désactivée ; cela ne désactive pas une connexion Netdata Cloud déjà configurée.
-Aucune notification externe n'est configurée dans ce changement.
+La configuration Discord et le provisionnement du secret sont décrits dans
+`ALERTING.md`. Le changement d'alerting doit rester non déployé tant que ce
+secret n'est pas créé sur l'hôte ; un commit de préparation ne vaut pas un test.
 
 ## Lecture du tableau de bord
 

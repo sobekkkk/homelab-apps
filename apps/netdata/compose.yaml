@@ -16,6 +16,9 @@ services:
       - source: netdata_configuration
         target: /etc/netdata/netdata.conf
         mode: 0444
+      - source: netdata_notifications
+        target: /etc/netdata/health_alarm_notify.conf
+        mode: 0444
     # Netdata observe les processus et les cgroups de l'hôte sans publier son
     # propre port ni partager le réseau de l'hôte.
     pid: host
@@ -30,6 +33,14 @@ services:
       - /sys:/host/sys:ro
       - /:/host/root:ro,rslave
       - /run/dbus:/run/dbus:ro
+      # Secret administré sur l'hôte, jamais stocké dans Git. Échouer plutôt
+      # que créer silencieusement un répertoire si le fichier est absent.
+      - type: bind
+        source: /var/lib/homelab-secrets/netdata-discord.conf
+        target: /run/secrets/netdata-discord.conf
+        read_only: true
+        bind:
+          create_host_path: false
     networks:
       - homelab-proxy
     security_opt:
@@ -62,6 +73,18 @@ volumes:
     name: netdata-cache
 
 configs:
+  netdata_notifications:
+    content: |
+      # Fichier shell de confiance, créé par l'administrateur sur l'hôte.
+      # Ne pas activer le mode debug : il peut exposer le webhook.
+      SEND_EMAIL="NO"
+      SEND_DISCORD="YES"
+      DEFAULT_RECIPIENT_DISCORD="homelab-alertes"
+      if [ -r /run/secrets/netdata-discord.conf ]; then
+          . /run/secrets/netdata-discord.conf
+      else
+          SEND_DISCORD="NO"
+      fi
   netdata_configuration:
     content: |
       # Politique versionnée. Les durées sont des objectifs : chaque tier est
