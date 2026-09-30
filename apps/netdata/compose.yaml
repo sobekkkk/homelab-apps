@@ -1,0 +1,42 @@
+services:
+  netdata:
+    # Image officielle, version et manifeste immuablement épinglés le 2026-09-30.
+    image: ghcr.io/netdata/netdata:v2.11.1@sha256:04218b2713bad4990ecd0c3dd9424bbf1a687bf72afb7b5f188c1e25e3619142
+    hostname: homelab
+    restart: unless-stopped
+    # Netdata observe les processus et les cgroups de l'hôte sans publier son
+    # propre port ni partager le réseau de l'hôte.
+    pid: host
+    volumes:
+      - netdata_config:/etc/netdata
+      - netdata_lib:/var/lib/netdata
+      - netdata_cache:/var/cache/netdata
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/host/root:ro,rslave
+      - /run/dbus:/run/dbus:ro
+    networks:
+      - homelab-proxy
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # Nécessaire à l'observation des processus de l'hôte, sans capacité de les
+    # modifier. Aucune capacité réseau ou d'administration Docker n'est donnée.
+    cap_add:
+      - SYS_PTRACE
+
+networks:
+  homelab-proxy:
+    external: true
+
+volumes:
+  netdata_config:
+    name: netdata-config
+  netdata_lib:
+    name: netdata-lib
+  netdata_cache:
+    name: netdata-cache

@@ -12,5 +12,10 @@ NixOS déclare l'hôte, Docker, le réseau et Portainer ; chaque dossier sous
 - les modifications passent par un commit relu puis par Portainer GitOps ;
 - aucun service ne publie de port ou ne rejoint Internet par défaut.
 
+## Applications présentes
+
+- `uptime-kuma` : disponibilité des interfaces et services ;
+- `netdata` : métriques temps réel de l'hôte, systemd et des workloads Docker.
+
 Le guide complet de l'architecture est conservé dans le dépôt NixOS privé de
 l'administration, `docs/GITOPS.md`.

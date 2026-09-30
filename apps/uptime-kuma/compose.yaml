@@ -78,6 +78,11 @@ configs:
           }
         }
 
+        handle /health/netdata {
+          rewrite * /api/v3/info
+          reverse_proxy netdata:19999
+        }
+
         respond "Caddy internal probe endpoint" 200
       }
 
@@ -93,6 +98,11 @@ configs:
       status.home.arpa {
         tls internal
         reverse_proxy uptime-kuma:3001
+      }
+
+      netdata.home.arpa {
+        tls internal
+        reverse_proxy netdata:19999
       }
 
       homelab.tail239aaa.ts.net {

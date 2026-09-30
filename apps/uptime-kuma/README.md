@@ -33,8 +33,9 @@ Le stack est lu par Portainer depuis `apps/uptime-kuma/compose.yaml`. Toute
 modification doit être commitée puis laissée au mécanisme GitOps ; ne pas
 modifier le compose dans l'éditeur Web de Portainer.
 
-Les sondes internes de Kuma utilisent `https://caddy/health/kuma` et
-`https://caddy/health/portainer`, avec l'erreur TLS ignorée. Ces endpoints
+Les sondes internes de Kuma utilisent `https://caddy/health/kuma`,
+`https://caddy/health/portainer` et, après le déploiement Netdata,
+`https://caddy/health/netdata`, avec l'erreur TLS ignorée. Ces endpoints
 réservent le trafic à Docker et évitent les redirections vers les noms
 `.home.arpa`; aucun en-tête HTTP personnalisé n'est requis. Le vhost `caddy`
 ne sert qu'à cette supervision interne et n'est pas publié sur l'hôte.
