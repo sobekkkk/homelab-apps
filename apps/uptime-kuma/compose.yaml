@@ -31,17 +31,10 @@ services:
     restart: unless-stopped
     volumes:
       - uptime_kuma_data:/app/data
-    ports:
-      # Accessible uniquement depuis l'hôte ; Tailscale Serve assure le TLS
-      # et l'accès privé du tailnet sur son port HTTPS dédié.
-      - "127.0.0.1:3001:3001"
     networks:
       - kuma
     security_opt:
       - no-new-privileges:true
-    labels:
-      # Révision explicite après l'activation du support nftables Docker.
-      - "homelab.gitops-revision=2026-09-30-nftables"
 
 networks:
   homelab-proxy:
@@ -75,6 +68,11 @@ configs:
       }
 
       status.home.arpa {
+        tls internal
+        reverse_proxy uptime-kuma:3001
+      }
+
+      homelab.tail239aaa.ts.net {
         tls internal
         reverse_proxy uptime-kuma:3001
       }
