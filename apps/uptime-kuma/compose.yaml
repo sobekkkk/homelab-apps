@@ -36,6 +36,9 @@ services:
       - uptime_kuma_data:/app/data
     networks:
       - kuma
+      # Sortie DNS/HTTPS pour les notifications ; aucun port hôte publié.
+      # Ce bridge privé au stack n'est pas partagé avec homelab-proxy.
+      - kuma-egress
     security_opt:
       - no-new-privileges:true
 
@@ -45,6 +48,9 @@ networks:
   kuma:
     internal: true
     name: uptime-kuma-net
+  kuma-egress:
+    driver: bridge
+    internal: false
 
 volumes:
   caddy_data:
