@@ -58,11 +58,26 @@ configs:
         admin off
       }
 
-      # Nom Docker interne utilisé par les sondes Kuma. Il sert uniquement à
-      # fournir un certificat TLS à SNI `caddy` : les en-têtes HTTP choisissent
-      # ensuite les vhosts Portainer ou Kuma ci-dessous.
+      # Nom Docker interne utilisé exclusivement par les sondes Kuma. Les
+      # endpoints évitent les redirections vers des noms .home.arpa que le
+      # conteneur de supervision ne doit pas résoudre.
       caddy {
         tls internal
+
+        handle /health/kuma {
+          rewrite * /setup-database-info
+          reverse_proxy uptime-kuma:3001
+        }
+
+        handle /health/portainer {
+          rewrite * /
+          reverse_proxy https://portainer:9443 {
+            transport http {
+              tls_insecure_skip_verify
+            }
+          }
+        }
+
         respond "Caddy internal probe endpoint" 200
       }
 
