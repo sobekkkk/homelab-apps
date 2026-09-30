@@ -30,6 +30,18 @@ root local, monté en lecture seule, sans ajout de port ni privilège. Ce patch
 n'est pas poussé avant création du fichier pour éviter de casser GitOps.
 Une réception réelle dans Discord sera nécessaire pour valider l'activation.
 
+## Jeu ciblé demandé après le test Discord
+
+Le propriétaire a montré la réception des tests WARNING, CRITICAL et CLEAR.
+La chaîne Discord de l'agent est donc testée. La personnalisation prépare
+17 règles sur des graphiques existants et conserve OOM/corruption mémoire.
+La liste fermée supprime les doublons natifs et les règles non retenues ; il
+faut réévaluer explicitement la couverture à chaque nouvelle intégration.
+Les valeurs instantanées observées servent de baseline, pas de preuve de SLO.
+Hystérésis, moyennes, délais et rappels critiques limitent le bruit.
+Aucun accès supplémentaire, secret lu ou incident artificiel n'est nécessaire.
+Le déploiement du nouveau jeu et le retest runtime restent soumis à approbation.
+
 Références :
 - https://learn.netdata.cloud/docs/netdata-agent/configuration/database
 - https://github.com/netdata/netdata/blob/v2.11.1/packaging/docker/run.sh

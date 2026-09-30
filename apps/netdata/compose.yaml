@@ -19,6 +19,9 @@ services:
       - source: netdata_notifications
         target: /etc/netdata/health_alarm_notify.conf
         mode: 0444
+      - source: netdata_health
+        target: /etc/netdata/health.d/homelab.conf
+        mode: 0444
     # Netdata observe les processus et les cgroups de l'hôte sans publier son
     # propre port ni partager le réseau de l'hôte.
     pid: host
@@ -73,6 +76,8 @@ volumes:
     name: netdata-cache
 
 configs:
+  netdata_health:
+    file: ./health.d/homelab.conf
   netdata_notifications:
     content: |
       # Fichier shell de confiance, créé par l'administrateur sur l'hôte.
@@ -87,6 +92,11 @@ configs:
       fi
   netdata_configuration:
     content: |
+      [health]
+          enabled = yes
+          # Liste fermee : aucune nouvelle alerte native ne notifie sans revue.
+          enabled alarms = homelab_* oom_kill 1hour_memory_hw_corrupted
+
       # Politique versionnée. Les durées sont des objectifs : chaque tier est
       # aussi limité en taille, et sa rétention effective peut être plus courte.
       [db]
