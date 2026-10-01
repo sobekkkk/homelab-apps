@@ -2,14 +2,14 @@
 
 Statut : configuration préparée, activation et lecture réelle non validées.
 
-Voir le [runbook infrastructure](https://github.com/sobekkkk/nixos-homelab-conf/blob/codex/netv/docs/NETV.md)
+Voir le [runbook infrastructure](https://github.com/sobekkkk/nixos-homelab-conf/blob/main/docs/NETV.md)
 pour le schéma, la migration TAP, les protections réseau et le rollback.
 
 Ordre impératif : infrastructure NixOS en mode test → stack NetV → Caddy →
-Homepage → recette de coupure VPN et lecture → fusion/persistance.
+Homepage → recette de coupure VPN et lecture → persistance NixOS.
 
 Dans Portainer : `netv-gitops`, dépôt `homelab-apps`, référence
-`refs/heads/codex/netv`, Compose `apps/netv/compose.yaml`. Aucun fichier
+`refs/heads/main`, Compose `apps/netv/compose.yaml`. Aucun fichier
 additionnel, aucun token IPTV dans une variable d'environnement ou dans Git.
 Compte admin et abonnement sont saisis dans l'interface privée HTTPS.
 
