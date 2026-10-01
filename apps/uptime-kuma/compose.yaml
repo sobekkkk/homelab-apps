@@ -12,6 +12,7 @@ services:
       # Serve emploie le même port seulement sur l'adresse Tailscale.
       - "192.168.1.69:8444:8444"
       - "192.168.1.69:8445:8445"
+      - "192.168.1.69:8446:8446"
     volumes:
       - caddy_data:/data
       - caddy_config:/config
@@ -22,6 +23,7 @@ services:
     networks:
       - homelab-proxy
       - kuma
+      - netv-ingress
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -44,6 +46,8 @@ services:
       - no-new-privileges:true
 
 networks:
+  netv-ingress:
+    external: true
   homelab-proxy:
     external: true
   kuma:
@@ -126,6 +130,20 @@ configs:
       homepage.home.arpa {
         tls internal
         reverse_proxy homepage:3000
+      }
+
+      netv.home.arpa, :8446 {
+        tls internal
+        header {
+          Content-Security-Policy "connect-src 'self'; media-src 'self' blob:; frame-src 'self'; object-src 'none'; base-uri 'self'"
+          Referrer-Policy "no-referrer"
+          X-Content-Type-Options "nosniff"
+          -Server
+        }
+        reverse_proxy netv:8000 {
+          header_up X-Forwarded-Proto https
+          flush_interval -1
+        }
       }
 
       # Listener indépendant : le Host tailnet ne sélectionne pas Kuma.

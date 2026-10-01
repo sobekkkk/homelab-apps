@@ -1,0 +1,78 @@
+services:
+  initialize:
+    image: ghcr.io/jvdillon/netv:latest@sha256:b30b43567b2177641449bb41231f496ab3a177c8c9944e15ee7884bd3174d58d
+    user: "0:0"
+    network_mode: none
+    restart: "no"
+    read_only: true
+    entrypoint: ["python3", "-c"]
+    command:
+      - |
+        import json, os
+        p = '/app/cache'
+        os.chown(p, 10001, 10001)
+        os.chmod(p, 0o700)
+        f = p + '/server_settings.json'
+        if not os.path.exists(f):
+            fd = os.open(f, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(fd, 'w') as stream:
+                json.dump({'transcode_mode': 'always', 'transcode_hw': 'vaapi', 'live_transcode_cache_secs': 0, 'vod_transcode_cache_mins': 15}, stream)
+            os.chown(f, 10001, 10001)
+    volumes: ["netv_state:/app/cache"]
+    cap_drop: [ALL]
+    cap_add: [CHOWN, DAC_OVERRIDE, FOWNER]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m
+    pids_limit: 32
+
+  netv:
+    # OCI revision 7a0537251716ab07a2da3860aba4316bfac41830.
+    # The v0.3.0 registry tag does not exist; latest is fixed by digest.
+    image: ghcr.io/jvdillon/netv:latest@sha256:b30b43567b2177641449bb41231f496ab3a177c8c9944e15ee7884bd3174d58d
+    restart: unless-stopped
+    init: true
+    depends_on:
+      initialize:
+        condition: service_completed_successfully
+    user: "10001:10001"
+    read_only: true
+    entrypoint: ["python3"]
+    command: ["main.py", "--port", "8000"]
+    environment:
+      TZ: Europe/Paris
+      PYTHONDONTWRITEBYTECODE: "1"
+      LOG_LEVEL: CRITICAL
+    logging:
+      driver: none
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    devices: ["/dev/dri/renderD128:/dev/dri/renderD128"]
+    volumes: ["netv_state:/app/cache"]
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=768m,uid=10001,gid=10001,mode=0700
+    dns: [172.30.240.2]
+    networks:
+      netv-egress:
+        ipv4_address: 172.30.240.10
+        gw_priority: 100
+      netv-ingress:
+        aliases: [netv]
+        gw_priority: 0
+    mem_limit: 1536m
+    cpus: 2.0
+    pids_limit: 192
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/', timeout=4)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 60s
+      retries: 3
+
+volumes:
+  netv_state:
+    name: netv-state
+networks:
+  netv-egress:
+    external: true
+  netv-ingress:
+    external: true
