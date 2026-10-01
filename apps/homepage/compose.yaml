@@ -4,7 +4,10 @@ services:
     image: ghcr.io/gethomepage/homepage:v2.4.0@sha256:643bd0be730d40f69d58028a55d1a896739333e8815786df42bc97f109ecbe61
     restart: unless-stopped
     user: "1000:1000"
-    read_only: true
+    # Portainer Compose injecte les configs content via l'API Docker :
+    # cette opération est refusée avec read_only=true (seul file est accepté).
+    # Exception limitée à la couche du conteneur, sans montage de l'hôte.
+    read_only: false
     environment:
       PUID: "1000"
       PGID: "1000"
@@ -19,18 +22,25 @@ services:
     configs:
       - source: settings
         target: /app/config/settings.yaml
+        mode: 0444
       - source: services
         target: /app/config/services.yaml
+        mode: 0444
       - source: bookmarks
         target: /app/config/bookmarks.yaml
+        mode: 0444
       - source: widgets
         target: /app/config/widgets.yaml
+        mode: 0444
       - source: empty
         target: /app/config/docker.yaml
+        mode: 0444
       - source: empty
         target: /app/config/kubernetes.yaml
+        mode: 0444
       - source: empty
         target: /app/config/proxmox.yaml
+        mode: 0444
     networks:
       - homelab-proxy
     cap_drop:

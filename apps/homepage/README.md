@@ -42,11 +42,20 @@ Ne jamais supprimer ses volumes pour appliquer la mise à jour.
 
 ## Sécurité et limites
 
-Image v2.4.0 épinglée par digest, UID/GID 1000, racine en lecture seule,
+Image v2.4.0 épinglée par digest, UID/GID 1000, couche du conteneur inscriptible,
 capabilities supprimées, no-new-privileges, limites CPU/mémoire/PID et logs
-bornés. Configurations inline montées en lecture seule ; tmpfs bornés pour
+bornés. Configurations inline déclarées en mode 0444 ; tmpfs bornés pour
 logs/cache. Pas de socket Docker, montage hôte, secret, widget authentifié,
 icône distante ou service discovery. Les métriques restent dans Netdata.
+
+Exception Portainer CE : son moteur Compose refuse `configs.content` avec
+`read_only: true` (erreur : `file is the sole supported option`). La racine
+inscriptible permet l'injection des configs, sans créer d'accès à l'hôte.
+Ce n'est pas équivalent à une racine readonly : un processus compromis peut
+modifier les chemins accessibles à son UID dans sa couche éphémère. Les modes
+des configs et le comportement de l'injection restent à contrôler au runtime.
+Les bind relatifs ne sont pas utilisés : les chemins du checkout Portainer ne
+sont pas nécessairement accessibles au daemon Docker.
 
 La liste `HOMEPAGE_ALLOWED_HOSTS` n'est **pas** une authentification. Cette
 première version repose sur l'identité Tailscale et un LAN de confiance ; tout
