@@ -11,6 +11,7 @@ services:
       # Relais interne dédié à Netdata. Il est lié au LAN, tandis que Tailscale
       # Serve emploie le même port seulement sur l'adresse Tailscale.
       - "192.168.1.69:8444:8444"
+      - "192.168.1.69:8445:8445"
     volumes:
       - caddy_data:/data
       - caddy_config:/config
@@ -120,6 +121,17 @@ configs:
       :8444 {
         tls internal
         reverse_proxy netdata:19999
+      }
+
+      homepage.home.arpa {
+        tls internal
+        reverse_proxy homepage:3000
+      }
+
+      # Listener indépendant : le Host tailnet ne sélectionne pas Kuma.
+      :8445 {
+        tls internal
+        reverse_proxy homepage:3000
       }
 
       homelab.tail239aaa.ts.net {

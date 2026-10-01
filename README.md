@@ -16,6 +16,8 @@ NixOS déclare l'hôte, Docker, le réseau et Portainer ; chaque dossier sous
 
 - `uptime-kuma` : disponibilité des interfaces et services ;
 - `netdata` : métriques temps réel de l'hôte, systemd et des workloads Docker.
+- `homepage` : portail privé des services et liens du lab ; voir
+  [le guide de déploiement](apps/homepage/README.md).
 
 Le guide complet de l'architecture est conservé dans le dépôt NixOS privé de
 l'administration, `docs/GITOPS.md`.

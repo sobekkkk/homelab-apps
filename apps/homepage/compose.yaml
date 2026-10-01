@@ -1,0 +1,134 @@
+services:
+  homepage:
+    # Manifeste multi-architecture vérifié le 2026-10-01.
+    image: ghcr.io/gethomepage/homepage:v2.4.0@sha256:643bd0be730d40f69d58028a55d1a896739333e8815786df42bc97f109ecbe61
+    restart: unless-stopped
+    user: "1000:1000"
+    read_only: true
+    environment:
+      PUID: "1000"
+      PGID: "1000"
+      HOSTNAME: "0.0.0.0"
+      HOMEPAGE_ALLOWED_HOSTS: "homelab.tail239aaa.ts.net:8445,homepage.home.arpa,homepage.home.arpa:8445,192.168.1.69:8445,homepage:3000"
+      NEXT_TELEMETRY_DISABLED: "1"
+      TZ: Europe/Paris
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=32m,uid=1000,gid=1000,mode=0700
+      - /app/config:rw,nosuid,nodev,size=16m,uid=1000,gid=1000,mode=0750
+      - /app/.next/cache:rw,nosuid,nodev,size=32m,uid=1000,gid=1000,mode=0750
+    configs:
+      - source: settings
+        target: /app/config/settings.yaml
+      - source: services
+        target: /app/config/services.yaml
+      - source: bookmarks
+        target: /app/config/bookmarks.yaml
+      - source: widgets
+        target: /app/config/widgets.yaml
+      - source: empty
+        target: /app/config/docker.yaml
+      - source: empty
+        target: /app/config/kubernetes.yaml
+      - source: empty
+        target: /app/config/proxmox.yaml
+    networks:
+      - homelab-proxy
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://127.0.0.1:3000/api/healthcheck"]
+      interval: 30s
+      timeout: 5s
+      start_period: 40s
+      retries: 3
+
+networks:
+  homelab-proxy:
+    external: true
+
+# Inline : aucun bind relatif dépendant du checkout interne de Portainer.
+configs:
+  empty:
+    content: "{}"
+  settings:
+    content: |
+      title: Homelab de Sobek
+      description: Services privés, supervision et administration
+      language: fr
+      theme: dark
+      color: slate
+      target: _blank
+      headerStyle: clean
+      hideVersion: false
+      hideErrors: false
+      disableUpdateCheck: true
+      disableSearchEngineIndexing: true
+      layout:
+        Administration et supervision:
+          style: row
+          columns: 3
+        Accès LAN:
+          style: row
+          columns: 3
+  services:
+    content: |
+      - Administration et supervision:
+          - Portainer:
+              href: https://homelab.tail239aaa.ts.net/
+              description: Conteneurs et déploiements GitOps — Tailscale
+          - Uptime Kuma:
+              href: https://homelab.tail239aaa.ts.net:8443/
+              description: Disponibilité des services et notifications Discord
+          - Netdata:
+              href: https://homelab.tail239aaa.ts.net:8444/
+              description: Métriques hôte, systemd, Docker et alertes
+      - Accès LAN:
+          - Portainer LAN:
+              href: https://portainer.home.arpa/
+              description: Résolution locale et autorité Caddy nécessaires
+          - Kuma LAN:
+              href: https://status.home.arpa/
+              description: Résolution locale et autorité Caddy nécessaires
+          - Netdata LAN:
+              href: https://netdata.home.arpa/
+              description: Résolution locale et autorité Caddy nécessaires
+  widgets:
+    content: |
+      - greeting:
+          text: Bienvenue dans le homelab
+      - datetime:
+          text_size: xl
+          format:
+            dateStyle: long
+            timeStyle: short
+            hourCycle: h23
+  bookmarks:
+    content: |
+      - Sources de vérité:
+          - Infrastructure NixOS:
+              - abbr: NX
+                href: https://github.com/sobekkkk/nixos-homelab-conf
+          - Applications GitOps:
+              - abbr: GH
+                href: https://github.com/sobekkkk/homelab-apps
+      - Réseau et confidentialité:
+          - Console Tailscale:
+              - abbr: TS
+                href: https://login.tailscale.com/admin/machines
+          - Vérification Mullvad:
+              - abbr: MV
+                href: https://mullvad.net/check
+      - Documentation:
+          - Homepage:
+              - abbr: HP
+                href: https://gethomepage.dev/
