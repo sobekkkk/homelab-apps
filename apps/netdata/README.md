@@ -14,7 +14,8 @@ leur point d'accès.
   vers `192.168.1.69` et confiance dans l'autorité Caddy ;
 - l'accès distant privé passe par
   `https://homelab.tail239aaa.ts.net:8444`, exclusivement dans le tailnet ;
-- aucun accès Internet, Funnel, API Docker TCP ou socket Docker n'est autorisé.
+- aucun accès entrant Internet public, Funnel, API Docker TCP ou socket Docker
+  n'est prévu ; des sorties HTTPS existent pour les notifications Discord.
 
 ## Ce que Netdata peut voir
 
@@ -50,8 +51,10 @@ agrégé. Chaque niveau vise au maximum 1 GiB de données : la durée effective 
 Les journaux Docker tournent sur trois fichiers de 10 Mo. La télémétrie anonyme
 est désactivée ; cela ne désactive pas une connexion Netdata Cloud déjà configurée.
 La configuration Discord et le provisionnement du secret sont décrits dans
-`ALERTING.md`. Le changement d'alerting doit rester non déployé tant que ce
-secret n'est pas créé sur l'hôte ; un commit de préparation ne vaut pas un test.
+[ALERTING.md](ALERTING.md). Le secret hôte doit exister avant le déploiement.
+Le jeu ciblé du commit `768f95f` reste à valider chargé et évalué ; le test
+Discord déjà montré par l'opérateur valide la notification, pas les seuils.
+Un commit de préparation ne vaut pas un test runtime.
 
 ## Lecture du tableau de bord
 
