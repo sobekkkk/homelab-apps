@@ -1,6 +1,8 @@
 # NetV GitOps
 
-Statut : configuration préparée, activation et lecture réelle non validées.
+Statut : déployé par le propriétaire ; HTTPS et sortie Mullvad confirmés.
+Test TCP/IPv4 de coupure WireGuard : `MULLVAD → BLOQUE → MULLVAD`.
+Lecture réelle, GPU, panne VM complète et reboot restent à valider.
 
 Voir le [runbook infrastructure](https://github.com/sobekkkk/nixos-homelab-conf/blob/main/docs/NETV.md)
 pour le schéma, la migration TAP, les protections réseau et le rollback.
