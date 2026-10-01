@@ -100,9 +100,16 @@ configs:
               href: https://homelab.tail239aaa.ts.net:8443/
               description: Disponibilité des services et notifications Discord
           - Netdata:
+              # NetV is an application, not a monitoring replacement.
               href: https://homelab.tail239aaa.ts.net:8444/
               description: Métriques hôte, systemd, Docker et alertes
+          - NetV:
+              href: https://homelab.tail239aaa.ts.net:8446/
+              description: IPTV privé via Mullvad
       - Accès LAN:
+          - NetV LAN:
+              href: https://netv.home.arpa/
+              description: Lecture relayée par la passerelle Mullvad
           - Portainer LAN:
               href: https://portainer.home.arpa/
               description: Résolution locale et autorité Caddy nécessaires
