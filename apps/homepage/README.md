@@ -1,7 +1,8 @@
 # Homepage — portail privé
 
-État : configuration préparée, validation statique avant activation. Un commit
-ne prouve pas que la stack est déployée. Homepage ne remplace ni Kuma ni Netdata.
+État : portail déjà déployé et confirmé par le propriétaire. Liens Jellyfin et
+Dispatcharr préparés, pas encore réconciliés par Portainer. Un commit ne prouve
+pas le déploiement. Homepage ne remplace ni Kuma ni Netdata.
 
 ```mermaid
 flowchart LR
@@ -34,7 +35,7 @@ flowchart LR
    `apps/homepage/compose.yaml`, polling 15 minutes, administrateurs uniquement.
 4. Mettre à jour la stack Kuma/Caddy existante depuis Git. Le conteneur Caddy
    peut être recréé ; brève interruption des interfaces proxifiées possible.
-5. Vérifier le conteneur healthy et l'URL HTTPS, les six liens, puis tester
+5. Vérifier le conteneur healthy et l'URL HTTPS, tous les liens, puis tester
    Portainer/Kuma/Netdata pour détecter une régression. Persister NixOS ensuite.
 
 Ne jamais créer une seconde stack Kuma : elle réutiliserait ses ports/volumes.

@@ -102,6 +102,17 @@ configs:
           reverse_proxy netdata:19999
         }
 
+        handle /health/jellyfin {
+          rewrite * /health
+          reverse_proxy jellyfin:8096
+        }
+
+        # Disponibilite HTTP uniquement; ne valide pas worker, EPG ou lecture.
+        handle /health/dispatcharr {
+          rewrite * /
+          reverse_proxy dispatcharr-media:9191
+        }
+
         respond "Caddy internal probe endpoint" 200
       }
 

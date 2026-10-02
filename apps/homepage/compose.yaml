@@ -87,6 +87,9 @@ configs:
         Administration et supervision:
           style: row
           columns: 3
+        Média:
+          style: row
+          columns: 2
         Accès LAN:
           style: row
           columns: 3
@@ -105,8 +108,21 @@ configs:
               description: Métriques hôte, systemd, Docker et alertes
           - NetV:
               href: https://homelab.tail239aaa.ts.net:8446/
-              description: IPTV privé via Mullvad
+              description: Ancienne application conservée pendant la migration
+      - Média:
+          - Jellyfin:
+              href: https://homelab.tail239aaa.ts.net:8447/
+              description: TV, guide des programmes et bibliothèque — accès privé
+          - Dispatcharr:
+              href: https://homelab.tail239aaa.ts.net:8448/
+              description: Administration des sources et du relais IPTV
       - Accès LAN:
+          - Jellyfin LAN:
+              href: https://jellyfin.home.arpa:8447/
+              description: DNS local et autorité Caddy nécessaires
+          - Dispatcharr LAN:
+              href: https://dispatcharr.home.arpa:8448/
+              description: Administration — DNS local et autorité Caddy nécessaires
           - NetV LAN:
               href: https://netv.home.arpa/
               description: Lecture relayée par la passerelle Mullvad

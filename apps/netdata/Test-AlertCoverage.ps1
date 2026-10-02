@@ -45,7 +45,7 @@ foreach ($block in $ruleBlocks) {
         throw "Regle non evaluee : $name"
     }
 }
-if ($expected.Count -ne 17 -or ($expected | Select-Object -Unique).Count -ne 17) { throw 'Inventaire attendu incorrect' }
+if ($expected.Count -ne 23 -or ($expected | Select-Object -Unique).Count -ne 23) { throw 'Inventaire attendu incorrect' }
 if ($RequireDeployed) {
     foreach ($native in @('oom_kill', '1hour_memory_hw_corrupted')) {
         $match = @($alarmValues | Where-Object name -eq $native)
@@ -55,7 +55,7 @@ if ($RequireDeployed) {
     }
     $unexpected = @($alarmValues | Where-Object { $_.name -notin ($expected + @('oom_kill', '1hour_memory_hw_corrupted')) })
     if ($unexpected.Count) { throw 'Regles inattendues encore chargees : liste fermee non appliquee' }
-    'Couverture runtime verifiee : 17 regles homelab et 2 regles natives evaluees.'
+    'Couverture runtime verifiee : 23 regles homelab et 2 regles natives evaluees.'
 } else {
-    'References verifiees : 17 graphiques et dimensions disponibles. Validation runtime non executee.'
+    'References verifiees : 23 graphiques et dimensions disponibles. Validation runtime non executee.'
 }

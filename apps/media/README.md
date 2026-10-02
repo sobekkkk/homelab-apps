@@ -1,6 +1,9 @@
 # Média privé : Dispatcharr + Jellyfin
 
-**Préparation uniquement : pas encore déployé ni validé en lecture.**
+**Déployé par le propriétaire ; Live TV et XMLTV confirmés le 2026-10-02.**
+Recette VPN par conteneur, Android TV et persistance encore à terminer.
+Supervision complémentaire préparée, pas encore déployée : voir
+`docs/MEDIA_OPERATIONS.md` dans le dépôt infrastructure.
 Migration parallèle à NetV, sans reprise automatique en clair. Voir le contrat
 réseau et le rollback dans `docs/MEDIA_MIGRATION.md` du dépôt infra.
 
