@@ -3,8 +3,14 @@
 Définition Compose publiée et redéployée via Portainer le 2026-10-02 depuis
 `refs/heads/main` (commit de configuration `0dc13c9`). Jellyfin, Dispatcharr,
 PostgreSQL et Redis sont healthy ; le worker est running et l'initialisation
-est terminée avec code 0. Le plugin, les bibliothèques et les réglages VA-API
-restent à appliquer et à valider. Pas de coupure VPN.
+est terminée avec code 0. VOD2MLIB 1.18.0 a ensuite été installé depuis le
+catalogue Dispatcharr (signature vérifiée par l'interface), activé et configuré
+avec le proxy interne, les NFO et le format de dossiers Jellyfin. Le scan VOD
+du compte Xtream est activé ; les films apparaissent dans Dispatcharr.
+Les actions de génération ont été lancées avec les limites 10 films / 1 série ;
+le nombre de fichiers, leurs permissions et la lecture restent à vérifier.
+Les bibliothèques Jellyfin et les réglages VA-API restent à appliquer et à valider.
+Aucun cron n'a été enregistré. Pas de coupure VPN.
 Live TV reste inchangée. Le catalogue contient des liens, pas une copie des
 vidéos : fournisseur et abonnement doivent rester disponibles.
 
