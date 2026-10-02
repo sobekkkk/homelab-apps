@@ -1,6 +1,10 @@
 # Films, séries IPTV et transcodage Jellyfin
 
-Préparation au 2026-10-02, non publiée et non déployée. Pas de coupure VPN.
+Définition Compose publiée et redéployée via Portainer le 2026-10-02 depuis
+`refs/heads/main` (commit de configuration `0dc13c9`). Jellyfin, Dispatcharr,
+PostgreSQL et Redis sont healthy ; le worker est running et l'initialisation
+est terminée avec code 0. Le plugin, les bibliothèques et les réglages VA-API
+restent à appliquer et à valider. Pas de coupure VPN.
 Live TV reste inchangée. Le catalogue contient des liens, pas une copie des
 vidéos : fournisseur et abonnement doivent rester disponibles.
 
