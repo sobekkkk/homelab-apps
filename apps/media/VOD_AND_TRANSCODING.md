@@ -8,8 +8,12 @@ catalogue Dispatcharr (signature vérifiée par l'interface), activé et configu
 avec le proxy interne, les NFO et le format de dossiers Jellyfin. Le scan VOD
 du compte Xtream est activé ; les films apparaissent dans Dispatcharr.
 Les actions de génération ont été lancées avec les limites 10 films / 1 série ;
-le nombre de fichiers, leurs permissions et la lecture restent à vérifier.
-Les bibliothèques Jellyfin et les réglages VA-API restent à appliquer et à valider.
+Les bibliothèques Films IPTV et Séries IPTV sont créées : Jellyfin affiche
+les 10 films de recette (avec affiches) et une série. Cela confirme la découverte
+du catalogue partagé, pas encore la lecture des flux ni toutes les permissions.
+Langue français, pays laissé vide ; fournisseurs de métadonnées et d'images
+en ligne désactivés, sauvegarde NFO/images et extraction trickplay/chapitres
+désactivées. Surveillance en temps réel activée. VA-API reste à valider et appliquer.
 Aucun cron n'a été enregistré. Pas de coupure VPN.
 Live TV reste inchangée. Le catalogue contient des liens, pas une copie des
 vidéos : fournisseur et abonnement doivent rester disponibles.
@@ -99,8 +103,9 @@ dans le conteneur avec son UID réel :
 Recette opérateur : `vainfo` fourni par jellyfin-ffmpeg dans le conteneur,
 puis lecture courte avec baisse volontaire de qualité côté client. Confirmer
 activité GPU, faible charge CPU et lecture stable. Ne pas publier de logs FFmpeg
-bruts : ils peuvent contenir les URLs fournisseur. Les réglages d'interface et
-les bibliothèques restent à appliquer ; la définition Compose seule ne les crée pas.
+bruts : ils peuvent contenir les URLs fournisseur. Les bibliothèques ont été
+créées dans l'interface ; la définition Compose seule ne les crée pas.
+L'accélération matérielle n'est pas déclarée fonctionnelle avant cette recette.
 
 Sources :
 - https://github.com/R3XCHRIS/VOD2MLIB/tree/v1.18.0
