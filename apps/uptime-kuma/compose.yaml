@@ -13,6 +13,8 @@ services:
       - "192.168.1.69:8444:8444"
       - "192.168.1.69:8445:8445"
       - "192.168.1.69:8446:8446"
+      - "192.168.1.69:8447:8447"
+      - "192.168.1.69:8448:8448"
     volumes:
       - caddy_data:/data
       - caddy_config:/config
@@ -24,6 +26,7 @@ services:
       - homelab-proxy
       - kuma
       - netv-ingress
+      - media-ingress
     security_opt:
       - no-new-privileges:true
     cap_drop:
@@ -46,6 +49,8 @@ services:
       - no-new-privileges:true
 
 networks:
+  media-ingress:
+    external: true
   netv-ingress:
     external: true
   homelab-proxy:
@@ -147,6 +152,36 @@ configs:
       }
 
       # Listener indépendant : le Host tailnet ne sélectionne pas Kuma.
+      jellyfin.home.arpa, :8447 {
+        tls internal
+        header {
+          Referrer-Policy "no-referrer"
+          X-Content-Type-Options "nosniff"
+          -Server
+        }
+        reverse_proxy jellyfin:8096 {
+          header_up X-Forwarded-Proto https
+          flush_interval -1
+        }
+      }
+
+      dispatcharr.home.arpa, :8448 {
+        tls internal
+        header {
+          Referrer-Policy "no-referrer"
+          X-Content-Type-Options "nosniff"
+          -Server
+        }
+        reverse_proxy dispatcharr:9191 {
+          # Treat Caddy as the private peer during initial setup. Do not
+          # trust user-supplied proxy headers at this administrative endpoint.
+          header_up -X-Forwarded-For
+          header_up -X-Real-IP
+          header_up X-Forwarded-Proto https
+          flush_interval -1
+        }
+      }
+
       :8445 {
         tls internal
         reverse_proxy homepage:3000

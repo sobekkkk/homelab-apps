@@ -1,0 +1,214 @@
+# Migration parallel to NetV. Deploy ONLY after the reviewed NixOS media
+# allowlist and media-ingress network are active. No direct WAN bridge.
+x-dispatcharr: &dispatcharr
+  image: ghcr.io/dispatcharr/dispatcharr:0.31.0@sha256:f81924fa3dbfeb463b3908be7e086bf58aacbd2ba56062bfb555ee3a471acf8f
+  restart: unless-stopped
+  stop_grace_period: 30s
+  cap_drop: [NET_RAW]
+  security_opt: ["no-new-privileges:true"]
+  # Upstream init needs root and a writable image; no privileged/socket/host mounts.
+  volumes:
+    - dispatcharr_data:/data
+    - media_credentials:/run/media-credentials:ro
+  tmpfs:
+    - /run/dispatcharr-logs:rw,nosuid,nodev,size=32m,mode=0770,uid=10003,gid=10003
+  # Stream URLs can contain credentials: do not persist container stdout.
+  logging: {driver: none}
+  dns: [172.30.240.2]
+  environment: &dispatcharr-env
+    TZ: Europe/Paris
+    PUID: "10003"
+    PGID: "10003"
+    DISPATCHARR_ENV: modular
+    DJANGO_SETTINGS_MODULE: dispatcharr.settings
+    DISPATCHARR_LOG_LEVEL: WARNING
+    DISPATCHARR_LOG_DIR: /run/dispatcharr-logs
+    POSTGRES_HOST: db
+    POSTGRES_PORT: "5432"
+    POSTGRES_DB: dispatcharr
+    POSTGRES_USER: dispatch
+    REDIS_HOST: redis
+    REDIS_PORT: "6379"
+    UWSGI_WORKERS: "2"
+    CELERY_MIN_WORKERS: "1"
+    CELERY_MAX_WORKERS: "2"
+    REDIS_MAX_CONNECTIONS: "20"
+    PYTHONUNBUFFERED: "1"
+    PYTHONDONTWRITEBYTECODE: "1"
+    DISPATCHARR_TRUSTED_PROXIES: "172.30.243.0/28"
+  entrypoint: ["/bin/bash", "-ec"]
+  pids_limit: 256
+
+services:
+  initialize:
+    image: ghcr.io/dispatcharr/dispatcharr:0.31.0@sha256:f81924fa3dbfeb463b3908be7e086bf58aacbd2ba56062bfb555ee3a471acf8f
+    restart: "no"
+    network_mode: none
+    user: "0:0"
+    read_only: true
+    cap_drop: [ALL]
+    cap_add: [CHOWN, FOWNER, DAC_OVERRIDE]
+    security_opt: ["no-new-privileges:true"]
+    entrypoint: ["python3", "-c"]
+    command:
+      - |
+        import os, secrets
+        os.chmod('/credentials', 0o700)
+        for name in ('postgres-password', 'redis-password'):
+            path = '/credentials/' + name
+            if not os.path.exists(path):
+                fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+                with os.fdopen(fd, 'w') as f:
+                    f.write(secrets.token_hex(32))
+        for path in ('/config', '/cache', '/recordings'):
+            os.chown(path, 10002, 10002)
+            os.chmod(path, 0o700)
+    volumes:
+      - media_credentials:/credentials
+      - jellyfin_config:/config
+      - jellyfin_cache:/cache
+      - jellyfin_recordings:/recordings
+    mem_limit: 128m
+    pids_limit: 32
+    logging: {driver: none}
+
+  db:
+    image: postgres:17@sha256:d74eeac9a635390a49bc21bd49fccd973de707e2a53a76ac49b552b8712ec46f
+    restart: unless-stopped
+    depends_on:
+      initialize: {condition: service_completed_successfully}
+    environment:
+      POSTGRES_DB: dispatcharr
+      POSTGRES_USER: dispatch
+      POSTGRES_PASSWORD_FILE: /run/media-credentials/postgres-password
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - media_credentials:/run/media-credentials:ro
+    networks: [media-data]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [NET_RAW]
+    command: ["postgres", "-c", "max_connections=60", "-c", "shared_buffers=64MB"]
+    mem_limit: 384m
+    pids_limit: 96
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dispatch -d dispatcharr"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    logging: {driver: local, options: {max-size: "5m", max-file: "2"}}
+
+  redis:
+    image: redis:8.2-alpine@sha256:b51665e66f00759be7c3152ad5ac3c66fb2f619c13ef62dea7cc1f9914524635
+    restart: unless-stopped
+    depends_on:
+      initialize: {condition: service_completed_successfully}
+    volumes:
+      - media_credentials:/run/media-credentials:ro
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - 'exec /usr/local/bin/docker-entrypoint.sh redis-server --requirepass "$$(cat /run/media-credentials/redis-password)" --maxmemory 96mb --maxmemory-policy noeviction --save "" --appendonly no --timeout 300'
+    networks: [media-data]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [NET_RAW]
+    mem_limit: 128m
+    pids_limit: 32
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=$$(cat /run/media-credentials/redis-password) redis-cli ping | grep -qx PONG"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    logging: {driver: local, options: {max-size: "5m", max-file: "2"}}
+
+  dispatcharr:
+    <<: *dispatcharr
+    command:
+      - |
+        export POSTGRES_PASSWORD="$$(cat /run/media-credentials/postgres-password)"
+        export REDIS_PASSWORD="$$(cat /run/media-credentials/redis-password)"
+        export CELERY_BROKER_URL="redis://:$${REDIS_PASSWORD}@redis:6379/0"
+        exec /app/docker/entrypoint.sh
+    depends_on:
+      db: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    networks:
+      netv-egress: {ipv4_address: 172.30.240.11, gw_priority: 100}
+      media-ingress: {aliases: [dispatcharr], gw_priority: 0}
+      media-data: {gw_priority: 0}
+    mem_limit: 1024m
+    cpus: 2.0
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:9191/', timeout=4)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 180s
+      retries: 5
+
+  worker:
+    <<: *dispatcharr
+    # Upstream worker starts as root; dropping its UID requires separate
+    # validation. It has no ingress network or published port.
+    command:
+      - |
+        export POSTGRES_PASSWORD="$$(cat /run/media-credentials/postgres-password)"
+        export REDIS_PASSWORD="$$(cat /run/media-credentials/redis-password)"
+        export CELERY_BROKER_URL="redis://:$${REDIS_PASSWORD}@redis:6379/0"
+        exec /app/docker/entrypoint.celery.sh
+    depends_on:
+      dispatcharr: {condition: service_healthy}
+    networks:
+      netv-egress: {ipv4_address: 172.30.240.13, gw_priority: 100}
+      media-data: {gw_priority: 0}
+    mem_limit: 768m
+    cpus: 1.5
+
+  jellyfin:
+    image: ghcr.io/jellyfin/jellyfin:12.1@sha256:008ec8024bdaaa6f0a3f0de468e185633eeba9d67c56936e8dbf5ef6b8d6200f
+    restart: unless-stopped
+    init: true
+    user: "10002:10002"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    depends_on:
+      initialize: {condition: service_completed_successfully}
+    environment:
+      TZ: Europe/Paris
+      JELLYFIN_PublishedServerUrl: https://homelab.tail239aaa.ts.net:8447
+    volumes:
+      - jellyfin_config:/config
+      - jellyfin_cache:/cache
+      - jellyfin_recordings:/recordings
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=256m,uid=10002,gid=10002,mode=0700
+    dns: [172.30.240.2]
+    networks:
+      netv-egress: {ipv4_address: 172.30.240.12, gw_priority: 100}
+      media-ingress: {aliases: [jellyfin], gw_priority: 0}
+    mem_limit: 1536m
+    cpus: 2.0
+    pids_limit: 192
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "--max-time", "4", "http://127.0.0.1:8096/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 120s
+      retries: 5
+    logging: {driver: none}
+
+volumes:
+  media_credentials: {name: media-credentials}
+  dispatcharr_data: {name: dispatcharr-data}
+  postgres_data: {name: dispatcharr-postgres}
+  jellyfin_config: {name: jellyfin-config}
+  jellyfin_cache: {name: jellyfin-cache}
+  jellyfin_recordings: {name: jellyfin-recordings}
+
+networks:
+  netv-egress: {external: true}
+  media-ingress: {external: true}
+  media-data:
+    internal: true
+    enable_ipv6: false
+    ipam:
+      config: [{subnet: 172.30.244.0/28}]
