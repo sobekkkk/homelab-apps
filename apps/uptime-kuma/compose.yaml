@@ -172,7 +172,7 @@ configs:
           X-Content-Type-Options "nosniff"
           -Server
         }
-        reverse_proxy dispatcharr:9191 {
+        reverse_proxy dispatcharr-media:9191 {
           # Treat Caddy as the private peer during initial setup. Do not
           # trust user-supplied proxy headers at this administrative endpoint.
           header_up -X-Forwarded-For

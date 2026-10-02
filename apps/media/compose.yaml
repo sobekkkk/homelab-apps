@@ -133,7 +133,8 @@ services:
       redis: {condition: service_healthy}
     networks:
       netv-egress: {ipv4_address: 172.30.240.11, gw_priority: 100}
-      media-ingress: {aliases: [dispatcharr], gw_priority: 0}
+      # Unique ingress alias avoids Docker DNS selecting the shared VPN bridge.
+      media-ingress: {aliases: [dispatcharr-media], gw_priority: 0}
       media-data: {gw_priority: 0}
     mem_limit: 1024m
     cpus: 2.0

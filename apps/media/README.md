@@ -34,7 +34,8 @@ certificat. Les interfaces Tailscale utilisent le certificat du tailnet.
 3. Dans la section Connect de Dispatcharr, relever ses endpoints de sortie
    M3U et XMLTV. Conserver chemins et éventuels tokens dans les réglages
    Jellyfin uniquement. Remplacer leur autorité publique par
-   `http://dispatcharr:9191`, sans modifier le reste de l'URL.
+   `http://dispatcharr-media:9191`, sans modifier le reste de l'URL. Cet alias
+   existe seulement sur l'ingress interne, pas sur le bridge VPN commun.
 4. Créer l'admin Jellyfin, refuser le port mapping automatique, puis créer un
    utilisateur de lecture non administrateur. Dans **Tableau de bord → TV en
    direct**, ajouter un tuner M3U et la source XMLTV interne. Ne pas coller le
