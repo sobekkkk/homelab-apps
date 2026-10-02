@@ -13,7 +13,14 @@ les 10 films de recette (avec affiches) et une série. Cela confirme la découve
 du catalogue partagé, pas encore la lecture des flux ni toutes les permissions.
 Langue français, pays laissé vide ; fournisseurs de métadonnées et d'images
 en ligne désactivés, sauvegarde NFO/images et extraction trickplay/chapitres
-désactivées. Surveillance en temps réel activée. VA-API reste à valider et appliquer.
+désactivées. Surveillance en temps réel activée. Le tableau de bord confirme
+10 films, 1 série et 10 épisodes. Le 2026-10-02, l'opérateur a validé vainfo
+dans le conteneur : Intel iHD, VA-API 1.24, ouverture renderD128 réussie.
+Le profil VA-API a été enregistré dans Jellyfin : décodage H264, HEVC,
+HEVC 10bit, MPEG2, VC1, VP8, VP9 et VP9 10bit ; encodage matériel H264.
+AV1, HEVC RExt, sortie HEVC/AV1, modes basse consommation et tone mapping
+restent désactivés. Cache explicite /cache/transcodes. Lecture et transcodage
+réels restent à tester ; vainfo ne constitue pas une recette de lecture.
 Aucun cron n'a été enregistré. Pas de coupure VPN.
 Live TV reste inchangée. Le catalogue contient des liens, pas une copie des
 vidéos : fournisseur et abonnement doivent rester disponibles.
@@ -105,7 +112,8 @@ puis lecture courte avec baisse volontaire de qualité côté client. Confirmer
 activité GPU, faible charge CPU et lecture stable. Ne pas publier de logs FFmpeg
 bruts : ils peuvent contenir les URLs fournisseur. Les bibliothèques ont été
 créées dans l'interface ; la définition Compose seule ne les crée pas.
-L'accélération matérielle n'est pas déclarée fonctionnelle avant cette recette.
+L'accès au pilote et le profil enregistré sont validés ; le transcodage réel
+n'est pas déclaré fonctionnel avant cette recette.
 
 Sources :
 - https://github.com/R3XCHRIS/VOD2MLIB/tree/v1.18.0
